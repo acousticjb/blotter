@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AETHER-QUANT // VIP Live Position Blotter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            obsidian: '#06080D',
+            panel: '#0B0F19',
+            panelHeader: '#111827',
+            panelBorder: '#1E283D',
+            emeraldBull: '#10B981',
+            crimsonBear: '#EF4444',
+            amberAccent: '#F59E0B',
+            cyanQuant: '#06B6D4'
+          },
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'monospace'],
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #06080D; color: #E2E8F0; }
+    .led-dot { width: 6px; height: 6px; border-radius: 9999px; display: inline-block; }
+    .led-emerald { background-color: #10B981; box-shadow: 0 0 8px #10B981; }
+    .led-amber { background-color: #F59E0B; box-shadow: 0 0 8px #F59E0B; }
+    .led-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+  </style>
+</head>
+<body class="bg-obsidian text-slate-200 font-sans antialiased min-h-screen flex flex-col p-2 sm:p-4 selection:bg-cyanQuant/30">
+  <div class="max-w-4xl w-full mx-auto space-y-3">
+    
+    <!-- Top Header Bar -->
+    <header class="bg-panelHeader border border-panelBorder rounded-[2px] px-3 py-2 flex flex-wrap items-center justify-between gap-2 shadow-lg">
+      <div class="flex items-center space-x-2 font-mono text-xs">
+        <span class="led-dot led-emerald led-pulse"></span>
+        <span class="font-bold tracking-wider text-slate-100">AETHER-QUANT</span>
+        <span class="text-[10px] text-amberAccent font-semibold">// VIP LIVE BLOTTER</span>
+      </div>
+      <div class="flex items-center space-x-3 font-mono text-[11px]">
+        <div class="flex items-center space-x-1.5 px-2 py-0.5 bg-obsidian border border-panelBorder rounded-[2px]">
+          <span class="text-slate-400">FEED:</span>
+          <span class="text-emeraldBull font-bold">SECURE REAL-TIME</span>
+        </div>
+        <div id="syncTimeBadge" class="text-slate-500 text-[10px]">Syncing...</div>
+      </div>
+    </header>
+
+    <!-- Scoreboard Metrics Bar -->
+    <div class="bg-panel border border-panelBorder rounded-[2px] overflow-hidden shadow-lg">
+      <div class="bg-panelHeader px-3 py-1.5 border-b border-panelBorder flex items-center justify-between font-mono text-xs">
+        <span class="font-bold text-[11px] text-slate-200 uppercase tracking-wide">BAYESIAN PERFORMANCE SCOREBOARD</span>
+        <div class="flex items-center space-x-2 text-[11px]">
+          <span class="text-slate-400">DESK WIN RATE:</span>
+          <span id="deskWinRate" class="font-bold text-emeraldBull tabular-nums">--%</span>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-panelBorder font-mono text-xs bg-obsidian/60">
+        <div class="p-2.5 space-y-0.5">
+          <div class="text-[10px] text-slate-400 uppercase tracking-wider">DECISIVE RECORD</div>
+          <div id="recordRatio" class="font-bold text-slate-200 text-sm tabular-nums">--W / --L</div>
+        </div>
+        <div class="p-2.5 space-y-0.5">
+          <div class="text-[10px] text-slate-400 uppercase tracking-wider">BOOK BIAS</div>
+          <div id="bookBiasText" class="font-bold text-cyanQuant text-sm tabular-nums">-- LONG / -- SHORT</div>
+        </div>
+        <div class="p-2.5 space-y-0.5">
+          <div class="text-[10px] text-slate-400 uppercase tracking-wider">ACTIVE EXPOSURE</div>
+          <div id="activeRiskCount" class="font-bold text-amberAccent text-sm tabular-nums">-- ACTIVE</div>
+        </div>
+        <div class="p-2.5 space-y-0.5">
+          <div class="text-[10px] text-slate-400 uppercase tracking-wider">QUEUE STATUS</div>
+          <div id="waitingQueueCount" class="font-bold text-slate-300 text-sm tabular-nums">-- WAITING</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Active Positions Section -->
+    <div class="bg-panel border border-panelBorder rounded-[2px] overflow-hidden shadow-lg">
+      <div class="bg-panelHeader px-3 py-1.5 border-b border-panelBorder flex items-center justify-between font-mono text-xs">
+        <div class="flex items-center space-x-2">
+          <span class="led-dot led-amber"></span>
+          <span class="font-bold text-slate-200 text-[11px] uppercase tracking-wider">LIVE WATCHER POSITION BLOTTER</span>
+        </div>
+        <span id="activeBadge" class="text-amberAccent font-bold text-[10px] tabular-nums">0 ACTIVE</span>
+      </div>
+      <div id="activePositionsList" class="p-2.5 space-y-2 font-mono text-xs divide-y divide-panelBorder/40">
+        <div class="text-center py-8 text-slate-500">Loading live positions from AETHER-QUANT engine...</div>
+      </div>
+    </div>
+
+    <!-- Recent Realized Trades Section -->
+    <div class="bg-panel border border-panelBorder rounded-[2px] overflow-hidden shadow-lg">
+      <div class="bg-panelHeader px-3 py-1.5 border-b border-panelBorder flex items-center justify-between font-mono text-xs">
+        <span class="font-bold text-slate-200 text-[11px] uppercase tracking-wider">RECENT REALIZED EXITS</span>
+        <span class="text-slate-400 text-[10px]">LAST 15 TRADES</span>
+      </div>
+      <div id="closedTradesList" class="p-2.5 space-y-1.5 font-mono text-xs divide-y divide-panelBorder/30">
+        <div class="text-center py-6 text-slate-500">Loading post-mortem history...</div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-3 text-[10px] font-mono text-slate-500 space-y-0.5">
+      <div>AETHER-QUANT // EMS v2.0 • Directional Hyperliquid Execution Protocol</div>
+      <div>100% Read-Only Client Stream • Zero Inbound Telemetry</div>
+    </footer>
+
+  </div>
+
+  <script>
+    const GIST_ID = 'e6b8b85bdcd5cd0ede9396ed186141ee';
+
+    async function fetchBlotter() {
+      try {
+        const res = await fetch(`https://api.github.com/gists/${GIST_ID}?t=${Date.now()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const contentStr = data.files['blotter.json']?.content;
+        if (!contentStr) return;
+        const blotter = JSON.parse(contentStr);
+        renderBlotter(blotter);
+      } catch (err) {
+        console.warn('Sync poll error:', err);
+      }
+    }
+
+    function renderBlotter(b) {
+      const sb = b.scoreboard || {};
+      const wrEl = document.getElementById('deskWinRate');
+      if (wrEl) wrEl.textContent = `${(sb.win_rate || 0).toFixed(1)}%`;
+
+      const recEl = document.getElementById('recordRatio');
+      if (recEl) recEl.textContent = `${sb.wins || 0}W / ${sb.losses || 0}L (${sb.scratches || 0}S)`;
+
+      const biasEl = document.getElementById('bookBiasText');
+      if (biasEl) biasEl.textContent = sb.book_bias || '0L / 0S';
+
+      const actEl = document.getElementById('activeRiskCount');
+      if (actEl) actEl.textContent = `${b.active_count || 0} ACTIVE`;
+
+      const waitEl = document.getElementById('waitingQueueCount');
+      if (waitEl) waitEl.textContent = `${b.waiting_count || 0} WAITING`;
+
+      const actBadge = document.getElementById('activeBadge');
+      if (actBadge) actBadge.textContent = `${b.active_count || 0} ACTIVE / ${b.waiting_count || 0} WAITING`;
+
+      const syncEl = document.getElementById('syncTimeBadge');
+      if (syncEl && b.updated_at) {
+        const dt = new Date(b.updated_at);
+        syncEl.textContent = `SYNC: ${dt.toLocaleTimeString()}`;
+      }
+
+      // Render Active & Waiting Trades
+      const activeList = document.getElementById('activePositionsList');
+      if (activeList) {
+        const trades = b.active_trades || [];
+        if (trades.length === 0) {
+          activeList.innerHTML = '<div class="text-center py-6 text-slate-500">All positions flat. Waiting for quant anomalies...</div>';
+        } else {
+          activeList.innerHTML = trades.map(t => {
+            const isLong = t.direction === 'LONG';
+            const dirColor = isLong ? 'text-emeraldBull' : 'text-crimsonBear';
+            const dirBg = isLong ? 'bg-emeraldBull/10 border-emeraldBull/30 text-emeraldBull' : 'bg-crimsonBear/10 border-crimsonBear/30 text-crimsonBear';
+            
+            let statusPill = '';
+            if (t.status === 'ACTIVE') {
+              statusPill = '<span class="px-1.5 py-0.2 rounded-[2px] bg-emeraldBull/20 text-emeraldBull border border-emeraldBull/40 font-bold text-[9px] animate-pulse">ACTIVE</span>';
+            } else if (t.status === 'T1_LOCKED_RUNNING_T2') {
+              statusPill = '<span class="px-1.5 py-0.2 rounded-[2px] bg-cyanQuant/20 text-cyanQuant border border-cyanQuant/40 font-bold text-[9px]">RUNNER (T2)</span>';
+            } else if (t.status === 'APPROACHING') {
+              statusPill = '<span class="px-1.5 py-0.2 rounded-[2px] bg-amberAccent/20 text-amberAccent border border-amberAccent/40 font-bold text-[9px]">APPROACHING</span>';
+            } else {
+              statusPill = `<span class="px-1.5 py-0.2 rounded-[2px] bg-panelBorder text-slate-400 text-[9px]">${t.status}</span>`;
+            }
+
+            const midEntry = ((t.entry_low + t.entry_high) / 2.0).toFixed(4);
+            const currPx = t.current_price ? Number(t.current_price).toFixed(4) : midEntry;
+            
+            let pnlHtml = '';
+            if (t.status === 'ACTIVE' || t.status === 'T1_LOCKED_RUNNING_T2') {
+              const diff = isLong ? (Number(currPx) - Number(midEntry)) : (Number(midEntry) - Number(currPx));
+              const pnlPct = (diff / Number(midEntry)) * 100.0;
+              const sign = pnlPct >= 0 ? '+' : '';
+              const clr = pnlPct >= 0 ? 'text-emeraldBull' : 'text-crimsonBear';
+              pnlHtml = `<span class="${clr} font-bold text-[11px] tabular-nums">${sign}${pnlPct.toFixed(2)}%</span>`;
+            }
+
+            return `
+              <div class="pt-2 first:pt-0 space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-2">
+                    <span class="font-bold text-sm text-slate-100">${t.symbol}</span>
+                    <span class="px-1 py-0.2 text-[10px] font-bold rounded-[2px] border ${dirBg}">${t.direction}</span>
+                    <span class="text-slate-400 text-[10px]">${t.scenario_type || 'SWING'}</span>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    ${pnlHtml}
+                    ${statusPill}
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] bg-obsidian p-2 rounded-[2px] border border-panelBorder/70">
+                  <div><span class="text-slate-500">MID:</span> <span class="font-bold text-slate-200 tabular-nums">$${currPx}</span></div>
+                  <div><span class="text-slate-500">ENTRY:</span> <span class="text-slate-300 tabular-nums">${t.entry_low} - ${t.entry_high}</span></div>
+                  <div><span class="text-slate-500">STOP:</span> <span class="text-crimsonBear font-semibold tabular-nums">${t.invalidation_stop}</span></div>
+                  <div><span class="text-slate-500">T1:</span> <span class="text-amberAccent font-semibold tabular-nums">${t.target_1}</span></div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      // Render Closed Trades
+      const closedList = document.getElementById('closedTradesList');
+      if (closedList) {
+        const closed = b.closed_trades || [];
+        if (closed.length === 0) {
+          closedList.innerHTML = '<div class="text-center py-4 text-slate-500">No recent closed trades recorded.</div>';
+        } else {
+          closedList.innerHTML = closed.map(c => {
+            const isWin = c.outcome === 'WIN';
+            const clr = isWin ? 'text-emeraldBull' : 'text-crimsonBear';
+            const sign = (c.pnl_pct || 0) >= 0 ? '+' : '';
+            return `
+              <div class="pt-1.5 first:pt-0 flex items-center justify-between text-[11px]">
+                <div class="flex items-center space-x-2">
+                  <span class="font-bold ${clr}">[${c.outcome}]</span>
+                  <span class="font-bold text-slate-200">#${c.scenario_id} ${c.symbol}</span>
+                  <span class="text-slate-400 text-[10px]">${c.direction}</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <span class="font-bold ${clr} tabular-nums">${sign}${(c.pnl_pct || 0).toFixed(2)}%</span>
+                  <span class="text-slate-500 text-[10px] hidden sm:inline">${c.closed_at ? c.closed_at.slice(5, 16).replace('T', ' ') : ''}</span>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+    }
+
+    // Initial fetch and 5s polling
+    fetchBlotter();
+    setInterval(fetchBlotter, 5000);
+  </script>
+</body>
+</html>
