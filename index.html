@@ -116,7 +116,6 @@
     <!-- Footer -->
     <footer class="text-center py-3 text-[10px] font-mono text-slate-500 space-y-0.5">
       <div>AETHER-QUANT // EMS v2.0 • Directional Hyperliquid Execution Protocol</div>
-      <div>100% Read-Only Client Stream • Zero Inbound Telemetry</div>
     </footer>
 
   </div>
@@ -126,15 +125,18 @@
 
     async function fetchBlotter() {
       try {
-        const res = await fetch(`https://api.github.com/gists/${GIST_ID}?t=${Date.now()}`);
+        // Direct Raw Gist with cache-busting to bypass Fastly cache and avoid GitHub API rate limits
+        const rawUrl = `https://gist.githubusercontent.com/acousticjb/${GIST_ID}/raw/blotter.json?nocache=${Date.now()}`;
+        const res = await fetch(rawUrl);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        const contentStr = data.files['blotter.json']?.content;
-        if (!contentStr) return;
-        const blotter = JSON.parse(contentStr);
+        const blotter = await res.json();
         renderBlotter(blotter);
       } catch (err) {
         console.warn('Sync poll error:', err);
+        const syncEl = document.getElementById('syncTimeBadge');
+        if (syncEl && !syncEl.textContent.startsWith('SYNC:')) {
+          syncEl.textContent = 'Reconnecting...';
+        }
       }
     }
 
