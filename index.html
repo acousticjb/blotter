@@ -192,11 +192,10 @@
             
             let pnlHtml = '';
             if (t.status === 'ACTIVE' || t.status === 'T1_LOCKED_RUNNING_T2') {
-              const diff = isLong ? (Number(currPx) - Number(midEntry)) : (Number(midEntry) - Number(currPx));
-              const pnlPct = (diff / Number(midEntry)) * 100.0;
-              const sign = pnlPct >= 0 ? '+' : '';
-              const clr = pnlPct >= 0 ? 'text-emeraldBull' : 'text-crimsonBear';
-              pnlHtml = `<span class="${clr} font-bold text-[11px] tabular-nums">${sign}${pnlPct.toFixed(2)}%</span>`;
+              const pnlUsd = typeof t.pnl_usd === 'number' ? t.pnl_usd : 0;
+              const sign = pnlUsd >= 0 ? '+' : '-';
+              const clr = pnlUsd >= 0 ? 'text-emeraldBull' : 'text-crimsonBear';
+              pnlHtml = `<span class="${clr} font-bold text-[11px] tabular-nums">${sign}$${Math.abs(pnlUsd).toFixed(2)}</span>`;
             }
 
             return `
@@ -234,7 +233,8 @@
           closedList.innerHTML = closed.map(c => {
             const isWin = c.outcome === 'WIN';
             const clr = isWin ? 'text-emeraldBull' : 'text-crimsonBear';
-            const sign = (c.pnl_pct || 0) >= 0 ? '+' : '';
+            const pnlUsd = typeof c.pnl_usd === 'number' ? c.pnl_usd : 0;
+            const sign = pnlUsd >= 0 ? '+' : '-';
             return `
               <div class="pt-1.5 first:pt-0 flex items-center justify-between text-[11px]">
                 <div class="flex items-center space-x-2">
@@ -243,7 +243,7 @@
                   <span class="text-slate-400 text-[10px]">${c.direction}</span>
                 </div>
                 <div class="flex items-center space-x-3">
-                  <span class="font-bold ${clr} tabular-nums">${sign}${(c.pnl_pct || 0).toFixed(2)}%</span>
+                  <span class="font-bold ${clr} tabular-nums">${sign}$${Math.abs(pnlUsd).toFixed(2)}</span>
                   <span class="text-slate-500 text-[10px] hidden sm:inline">${c.closed_at ? c.closed_at.slice(5, 16).replace('T', ' ') : ''}</span>
                 </div>
               </div>
